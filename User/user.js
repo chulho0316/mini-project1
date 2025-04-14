@@ -8,7 +8,7 @@ const router = express.Router();
 // 라우터 객체 생성, 이건 하나의 미니 서버. 이 안에서 여러 API를 만들 수 있음
 // 마지막엔 module.exports = router;로 내보내서 server.js에 연결함
 
-const db = require('../db');
+const db = require('../db/db');
 // SQLite 데이터베이스 연결 파일을 가져와서 사용할 준비
 
 const Joi = require('joi');

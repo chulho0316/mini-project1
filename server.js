@@ -1,3 +1,5 @@
+require('dotenv').config();
+//dotenv 설정 추가
 const express = require('express'); //express는 node.js로 서버 만들때 가장 많이
 //쓰는 **프레임워크(기반도구)** , HTTP 요청/응답을 쉽게 처리해줌
 const cors = require('cors'); // CORS(Cross-Origin Resource Sharing)
@@ -13,13 +15,14 @@ app.use(cors()); //app이 객체, cors를 미들웨어로 등록. 미들웨어:�
 app.use(express.json()); //이것 역시도 미들웨어. 의미는 들어오는 json 요청 바디를
 //자동으로 js 객체로 바꿔줌
 
-const db = requie('./db'); //앞에서 만든 db.js 파일을 불어와서 연결해주는 부분
+const db = require('./db/db'); //앞에서 만든 db.js 파일을 불어와서 연결해주는 부분
 //module.exports = db 해줬기 때문에 사용가능
 const userRouter = require('./User/user'); // 회원가입/로그인 기능을 따로 라우터로
 //만들기 위해 불러온 부분, user.js 라우터 파일에서 경로별 기능을 만듦
 app.use('/user', userRouter); // 유저라우터가 담당하는 모든 라우트 경로 앞에 /user를
 //붙이겠다. POST/user/register 또는 GET / user /list 같은 API경로
-
+const path = require('path'); // 📦 경로 처리용 모듈 추가
+app.use(express.static(path.join(__dirname, 'public'))); // 📁 public 폴더 내 정적 파일 제공
 app.listen(port, () => {console.log(`server running on http://localhost:${port}`);
 }); // app.listen(port,()=>{...}) 서버를 실제로 켜는 부분, port = 3000 이니까 브라우저에서
 //http://localhost : 3000 으로 요청 보낼 수 있음
