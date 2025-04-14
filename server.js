@@ -14,9 +14,6 @@ app.use(cors()); //app이 객체, cors를 미들웨어로 등록. 미들웨어:�
 //동작하는 함수 이경우는: 클라이언트에서 들어오는 요청을 CORS 허용함.
 app.use(express.json()); //이것 역시도 미들웨어. 의미는 들어오는 json 요청 바디를
 //자동으로 js 객체로 바꿔줌
-
-const db = require('./db/db'); //앞에서 만든 db.js 파일을 불어와서 연결해주는 부분
-//module.exports = db 해줬기 때문에 사용가능
 const userRouter = require('./User/user'); // 회원가입/로그인 기능을 따로 라우터로
 //만들기 위해 불러온 부분, user.js 라우터 파일에서 경로별 기능을 만듦
 app.use('/user', userRouter); // 유저라우터가 담당하는 모든 라우트 경로 앞에 /user를
