@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대시보드</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background-color: #4ade80;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      animation: fadein 0.5s ease, fadeout 0.5s ease 2.5s;
+    }
+
+    @keyframes fadein {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeout {
+      from {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+    }
+  </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen flex flex-col items-center justify-start p-6">
+  <!-- 헤더 -->
+  <header class="w-full max-w-2xl flex justify-between items-center mb-8">
+    <h1 class="text-3xl font-bold text-gray-800">👤 마이 대시보드</h1>
+    <button id="logoutBtn" class="text-sm text-red-500 hover:underline">로그아웃</button>
+  </header>
+
+  <!-- 내 정보 -->
+  <section class="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6 mb-6">
+    <h2 class="text-xl font-semibold text-gray-700 mb-4">📄 내 정보</h2>
+    <div id="userInfo" class="text-gray-800 space-y-2">
+      <!-- JS로 사용자 정보 채워짐 -->
+    </div>
+  </section>
+
+  <!-- 비밀번호 수정 -->
+  <section class="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6 mb-6">
+    <h2 class="text-xl font-semibold text-gray-700 mb-4">🔐 비밀번호 변경</h2>
+    <form id="passwordForm" class="space-y-4">
+      <input type="password" id="currentPassword" placeholder="현재 비밀번호"
+        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <input type="password" id="newPassword" placeholder="새 비밀번호"
+        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <input type="password" id="confirmPassword" placeholder="비밀번호 확인"
+        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400">
+      <button type="submit"
+        class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition">비밀번호 변경</button>
+    </form>
+  </section>
+
+  <!-- 회원 탈퇴 -->
+  <section class="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-6">
+    <h2 class="text-xl font-semibold text-red-600 mb-4">⚠️ 회원 탈퇴</h2>
+    <button id="deleteBtn"
+      class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition">회원 탈퇴하기</button>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    if (!token) {
+      alert('로그인이 필요합니다.');
+      location.href = '/login.html';
+    }
+
+    const showToast = (message, color = 'green') => {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.backgroundColor = color === 'red' ? '#f87171' : '#4ade80';
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    };
+
+    // 내 정보 조회
+    fetch('/user/me', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    })
+      .then(res => res.json())
+      .then(data => {
+        const userDiv = document.getElementById('userInfo');
+        userDiv.innerHTML = `<p><strong>아이디:</strong> ${data.user.username}</p>`;
+      });
+
+    // 로그아웃
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      localStorage.removeItem('token');
+      location.href = '/login.html';
+    });
+
+    // 비밀번호 수정
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const currentPassword = document.getElementById('currentPassword').value;
+      const newPassword = document.getElementById('newPassword').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
+      if (newPassword !== confirmPassword) {
+        showToast('비밀번호가 일치하지 않습니다.', 'red');
+        return;
+      }
+
+      const userId = JSON.parse(atob(token.split('.')[1])).id;
+
+      const res = await fetch(`/user/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ password: newPassword })
+      });
+
+      if (res.ok) {
+        showToast('비밀번호가 변경되었습니다.');
+        e.target.reset();
+      } else {
+        showToast('비밀번호 변경 실패', 'red');
+      }
+    });
+
+    // 회원 탈퇴
+    document.getElementById('deleteBtn').addEventListener('click', async () => {
+      if (confirm('정말로 탈퇴하시겠습니까?')) {
+        const userId = JSON.parse(atob(token.split('.')[1])).id;
+        const res = await fetch(`/user/${userId}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          showToast('탈퇴 완료');
+          localStorage.removeItem('token');
+          setTimeout(() => location.href = '/register.html', 1500);
+        } else {
+          showToast('탈퇴 실패', 'red');
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
