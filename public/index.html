@@ -5,38 +5,38 @@
   <title>회원 기능 실습</title>
 </head>
 <body>
-  <h1>회원 기능 실습</h1> // 페이지 제목
+  <h1>회원 기능 실습</h1> 
 
-  <h2>회원가입</h2> // 회원가입 영역 제목
+  <h2>회원가입</h2> 
   <form id="registerForm">
-    <input type="text" id="regUsername" placeholder="아이디" required /> // 아이디 입력
-    <input type="password" id="regPassword" placeholder="비밀번호" required /> // 비밀번호 입력
-    <button type="submit">회원가입</button> // 제출 버튼
+    <input type="text" id="regUsername" placeholder="아이디" required /> 
+    <input type="password" id="regPassword" placeholder="비밀번호" required /> 
+    <button type="submit">회원가입</button> 
   </form>
 
-  <h2>로그인</h2> // 로그인 영역 제목
+  <h2>로그인</h2> 
   <form id="loginForm">
-    <input type="text" id="loginUsername" placeholder="아이디" required /> // 아이디 입력
-    <input type="password" id="loginPassword" placeholder="비밀번호" required /> // 비밀번호 입력
-    <button type="submit">로그인</button> // 로그인 버튼
+    <input type="text" id="loginUsername" placeholder="아이디" required /> 
+    <input type="password" id="loginPassword" placeholder="비밀번호" required /> 
+    <button type="submit">로그인</button> 
   </form>
 
-  <h2>내 정보 보기</h2> // 로그인한 유저 정보 확인
-  <button onclick="loadUserInfo()">내 정보</button> // 정보 요청 버튼
-  <div id="userInfo"></div> // 정보 표시 영역
+  <h2>내 정보 보기</h2> 
+  <button onclick="loadUserInfo()">내 정보</button> 
+  <div id="userInfo"></div> 
 
-  <h2>비밀번호 변경</h2> // 비밀번호 변경 영역 제목
+  <h2>비밀번호 변경</h2> 
   <form id="passwordForm">
-    <input type="password" id="newPassword" placeholder="새 비밀번호" required /> // 새 비밀번호 입력
-    <button type="submit">비밀번호 수정</button> // 수정 버튼
+    <input type="password" id="newPassword" placeholder="새 비밀번호" required />
+    <button type="submit">비밀번호 수정</button>
   </form>
 
-  <h2>회원 탈퇴</h2> // 탈퇴 영역 제목
-  <button id="deleteBtn">회원 탈퇴</button> // 탈퇴 요청 버튼
+  <h2>회원 탈퇴</h2> 
+  <button id="deleteBtn">회원 탈퇴</button> 
 
-  <h2>전체 회원 목록</h2> // 유저 목록 조회 영역
-  <button onclick="loadUserList()">전체 회원 조회</button> // 조회 요청 버튼
-  <ul id="userList"></ul> // 목록 출력 영역
+  <h2>전체 회원 목록</h2>
+  <button onclick="loadUserList()">전체 회원 조회</button>
+  <ul id="userList"></ul> 
 
   <script>
     // 회원가입 요청
