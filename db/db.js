@@ -11,17 +11,21 @@ const db = new sqlite3.Database(dbPath, (err) => {
         console.log('SQLite DB 연결 성공');
     }
 }); //dbpath에 있는 파일을 연결. 파일이 없으면 자동으로 생성하고, 테이블 생성. sql이라는 언어 사용 테이블 생성 지시
+
 db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,
-      password TEXT
+      password TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
       `); // 유저 테이블 생성하는거
       // INTEGER(id) : 자동 증가되는 번호(PK)
       // TEXT(username) : 사용자이름, 중복안됨(UNIQUE)
       // TEXT(password) : 암호화된 비밀번호 저장 예정
+      // DATETIME(created_at) : 가입 시각, 자동으로 현재시간 저장됨
       // IF NOT EXISTS : 이미 있으면 만들기ㄴㄴ(중복 생성 방지)
+
 module.exports = db;
 //이 db 연결을 다른파일에서도 쓸수 있게 내보냄
 //요약하자면 SQLite는 파일 기반 데이터 베이스고
