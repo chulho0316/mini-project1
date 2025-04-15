@@ -1,131 +1,139 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <title>회원 기능 실습</title>
+  <meta charset="UTF-8">
+  <title>회원 기능</title>
 </head>
 <body>
-  <h1> 회원 기능 실습</h1>
-
-  <!-- 회원가입 영역 -->
   <h2>회원가입</h2>
-  <input type="text" id="register-username" placeholder="아이디">
-  <!-- 사용자명 입력 -->
-  <input type="password" id="register-password" placeholder="비밀번호">
-  <!-- 비밀번호 입력 -->
-  <button onclick="register()">회원가입</button>
-  <!-- 버튼 클릭 시 register() 함수 실행 -->
+  <form id="registerForm">
+    <input type="text" id="regUsername" placeholder="아이디" required />
+    <input type="password" id="regPassword" placeholder="비밀번호" required />
+    <button type="submit">가입하기</button>
+  </form>
 
-  <!-- 로그인 영역 -->
   <h2>로그인</h2>
-  <input type="text" id="login-username" placeholder="아이디">
-  <input type="password" id="login-password" placeholder="비밀번호">
-  <button onclick="login()">로그인</button>
-  <!-- 로그인 시 login() 함수 실행 -->
+  <form id="loginForm">
+    <input type="text" id="loginUsername" placeholder="아이디" required />
+    <input type="password" id="loginPassword" placeholder="비밀번호" required />
+    <button type="submit">로그인</button>
+  </form>
 
-  <!-- 내 정보 조회 -->
-  <h2>내 정보 보기</h2>
-  <button onclick="getMyInfo()">내 정보</button>
-  <!-- 토큰으로 내 정보 조회 -->
-  <pre id="myInfo"></pre>
-  <!-- 결과 보여줄 영역 -->
+  <div id="userInfo"></div>
 
-  <!-- 비밀번호 수정 -->
   <h2>비밀번호 변경</h2>
-  <input type="password" id="new-password" placeholder="새 비밀번호">
-  <button onclick="updatePassword()">비밀번호 수정</button>
+  <form id="changePwForm">
+    <input type="password" id="newPassword" placeholder="새 비밀번호" required />
+    <button type="submit">비밀번호 변경</button>
+  </form>
 
-  <!-- 회원 탈퇴 -->
-  <h2>회원 탈퇴</h2>
-  <button onclick="deleteAccount()">회원 탈퇴</button>
+  <button id="deleteUserBtn">회원 탈퇴</button>
+  <button id="loadUsersBtn">유저 목록 보기</button>
+
+  <ul id="userList"></ul>
 
   <script>
-    // 로그인 성공 시 저장될 토큰 & userId
-    let token = null;
-    let userId = null;
-
-    // 회원가입 요청 함수
-    async function register() {
-      const username = document.getElementById('register-username').value;
-      const password = document.getElementById('register-password').value;
-
-      const res = await fetch('/user/register', {
+    // 회원가입
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('regUsername').value;
+      const password = document.getElementById('regPassword').value;
+      const res = await fetch('/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-
       const data = await res.json();
       alert(data.message);
-    }
+    });
 
-    // 로그인 요청 + 토큰 저장
-    async function login() {
-      const username = document.getElementById('login-username').value;
-      const password = document.getElementById('login-password').value;
-
+    // 로그인
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
       const res = await fetch('/user/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
-
       const data = await res.json();
-      alert(data.message);
-
       if (res.ok) {
-        token = data.token;     // JWT 토큰 저장
-        userId = data.userId;   // 사용자 ID 저장
+        localStorage.setItem('token', data.token);
+        alert('로그인 성공!');
+        loadUserInfo();
+      } else {
+        alert(data.message);
+      }
+    });
+
+    // 내 정보 조회
+    async function loadUserInfo() {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/user/me', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      const div = document.getElementById('userInfo');
+      if (res.ok) {
+        div.innerHTML = `
+          <p>안녕하세요, ${data.user.username}님 (ID: ${data.user.id})</p>
+          <p>userId 저장됨</p>
+        `;
+        localStorage.setItem('userId', data.user.id);
+      } else {
+        div.innerHTML = `<p>${data.message}</p>`;
       }
     }
 
-    // 내 정보 불러오기
-    async function getMyInfo() {
-      const res = await fetch('/user/me', {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const data = await res.json();
-      document.getElementById('myInfo').textContent = JSON.stringify(data, null, 2);
-    }
-
-    // 비밀번호 수정
-    async function updatePassword() {
-      const newPassword = document.getElementById('new-password').value;
-
+    // 비밀번호 변경
+    document.getElementById('changePwForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      const password = document.getElementById('newPassword').value;
       const res = await fetch(`/user/${userId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ password: newPassword })
+        body: JSON.stringify({ password })
       });
-
       const data = await res.json();
       alert(data.message);
-    }
+    });
 
     // 회원 탈퇴
-    async function deleteAccount() {
-      const confirmed = confirm("정말 탈퇴하시겠습니까?");
-      if (!confirmed) return;
-
+    document.getElementById('deleteUserBtn').addEventListener('click', async () => {
+      const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      if (!confirm('정말 탈퇴하시겠습니까?')) return;
       const res = await fetch(`/user/${userId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-
       const data = await res.json();
       alert(data.message);
-
       if (res.ok) {
-        token = null;
-        userId = null;
-        alert("탈퇴 완료! 다시 시작하려면 새로고침하세요.");
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        location.reload();
       }
-    }
+    });
+
+    // 유저 목록 조회
+    document.getElementById('loadUsersBtn').addEventListener('click', async () => {
+      const res = await fetch('/user');
+      const data = await res.json();
+      const ul = document.getElementById('userList');
+      ul.innerHTML = '';
+      data.users.forEach(user => {
+        const li = document.createElement('li');
+        li.textContent = `ID: ${user.id}, 아이디: ${user.username}`;
+        ul.appendChild(li);
+      });
+    });
   </script>
 </body>
 </html>
