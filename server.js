@@ -14,13 +14,19 @@ app.use(cors()); //app이 객체, cors를 미들웨어로 등록. 미들웨어:�
 //동작하는 함수 이경우는: 클라이언트에서 들어오는 요청을 CORS 허용함.
 app.use(express.json()); //이것 역시도 미들웨어. 의미는 들어오는 json 요청 바디를
 //자동으로 js 객체로 바꿔줌
+
 const userRouter = require('./User/user'); // 회원가입/로그인 기능을 따로 라우터로
 //만들기 위해 불러온 부분, user.js 라우터 파일에서 경로별 기능을 만듦
 app.use('/user', userRouter); // 유저라우터가 담당하는 모든 라우트 경로 앞에 /user를
 //붙이겠다. POST/user/register 또는 GET / user /list 같은 API경로
+
 const path = require('path'); // 📦 경로 처리용 모듈 추가
 app.use(express.static(path.join(__dirname, 'public'))); // 📁 public 폴더 내 정적 파일 제공
-app.listen(port, () => {console.log(`server running on http://localhost:${port}`);
-}); // app.listen(port,()=>{...}) 서버를 실제로 켜는 부분, port = 3000 이니까 브라우저에서
-//http://localhost : 3000 으로 요청 보낼 수 있음
-//console.log(...) 터미널 메시지 출력(디버깅용, 확인용) 여기에선 서버가 잘켜졌는지 확인용 로그 메시지
+
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`server running on http://localhost:${port}`);
+  });
+}
+
+module.exports = app; // 테스트에서 사용할 수 있도록 내보냄

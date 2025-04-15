@@ -16,8 +16,8 @@ const Joi = require('joi');
 const bcrypt = require('bcrypt');
 // bcrypt는 비밀번호를 안전하게 암호화하는 도구. DB가 털려도 실제 비번은 알 수 없음
 
-// 회원가입 (POST /user/users)
-router.post('/users', async (req, res) => {
+// 회원가입 (POST /user)
+router.post('/', async (req, res) => {
   const { username, password } = req.body;
 
   const schema = Joi.object({
@@ -44,8 +44,8 @@ router.post('/users', async (req, res) => {
   });
 });
 
-// 사용자 목록 조회 (GET /user/users)
-router.get('/users', (req, res) => {
+// 사용자 목록 조회 (GET /user)
+router.get('/', (req, res) => {
   UserModel.getAllUsers((err, rows) => {
     if (err) {
       return res.status(500).json({ message: '서버 내부 오류(DB 조회 실패)', error: err.message });
@@ -106,8 +106,8 @@ router.get('/me', authenticateToken, (req, res) => {
   });
 });
 
-// 비밀번호 수정 (PATCH /user/users/:id)
-router.patch('/users/:id', authenticateToken, async (req, res) => {
+// 비밀번호 수정 (PATCH /user/:id)
+router.patch('/:id', authenticateToken, async (req, res) => {
   const userIdFromToken = req.user.id;
   const userIdFromParam = parseInt(req.params.id);
 
@@ -137,8 +137,8 @@ router.patch('/users/:id', authenticateToken, async (req, res) => {
   });
 });
 
-// 회원 탈퇴 (DELETE /user/users/:id)
-router.delete('/users/:id', authenticateToken, (req, res) => {
+// 회원 탈퇴 (DELETE /user/:id)
+router.delete('/:id', authenticateToken, (req, res) => {
   const userIdFromToken = req.user.id;
   const userIdFromParam = parseInt(req.params.id);
 

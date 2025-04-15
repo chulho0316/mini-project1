@@ -8,5 +8,9 @@
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.1.0"
   }
 }
