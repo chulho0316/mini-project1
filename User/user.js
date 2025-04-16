@@ -59,15 +59,18 @@ router.get('/', (req, res) => {
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
+
   const schema = Joi.object({
     username: Joi.string().required(),  // 아이디는 필수
     password: Joi.string().required()  // 비밀번호도 필수
   });
 
+
   const { error } = schema.validate({ username, password });
   if (error) {
     return res.status(400).json({ message: error.details[0].message });
   }
+
 
   UserModel.findUserByUsername(username, async (err, user) => {
     if (err) {
@@ -77,6 +80,7 @@ router.post('/login', async (req, res) => {
       return res.status(404).json({ message: '존재하지 않는 사용자입니다.' });
     }
     if (!user.is_verified) {
+
       return res.status(403).json({ message: '이메일 인증이 완료되지 않았습니다.' });
     }  // 이메일 인증 안 된 사용자 차단
     const match = await bcrypt.compare(password, user.password); // 비밀번호 비교
@@ -217,7 +221,7 @@ router.post('/forgot-password', async (req, res) => {
 // 회원가입 (이메일 인증 방식)
 router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
-
+  console.log("\n\n username, email, password : ", username, email, password)
   const schema = Joi.object({
     username: Joi.string().min(3).required(),
     email: Joi.string().email().required(),
@@ -286,7 +290,7 @@ router.get('/verify-email', async (req, res) => {
         <html>
           <head><meta charset="UTF-8"><title>이메일 인증 완료</title></head>
           <body style="text-align:center; font-family:sans-serif; padding:50px;">
-            <h2>✅ 이메일 인증이 완료되었습니다!</h2>
+            <h2> 이메일 인증이 완료되었습니다!</h2>
             <p><a href="/login.html">로그인 하러 가기</a></p>
           </body>
         </html>

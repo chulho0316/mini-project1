@@ -66,7 +66,6 @@
   <div id="toast" class="toast hidden"></div>
 
   <script>
-    // ✅ 토스트 알림 함수
     const showToast = (message, color = 'green') => {
       const toast = document.getElementById('toast');
       toast.textContent = message;
@@ -75,7 +74,6 @@
       setTimeout(() => toast.classList.add('hidden'), 3000);
     };
 
-    // ✅ 회원가입 처리
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('username').value;
@@ -88,34 +86,21 @@
         return;
       }
 
-      const res = await fetch('/user', {
+      const res = await fetch('/user/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password })
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        showToast('회원가입 성공!');
-
-        // 자동 로그인
-        const loginRes = await fetch('/user/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-
-        if (loginRes.ok) {
-          const data = await loginRes.json();
-          localStorage.setItem('token', data.token);
-          setTimeout(() => location.href = '/dashboard.html', 1500);
-        } else {
-          showToast('자동 로그인 실패', 'red');
-        }
-
+        showToast(' 인증 메일이 전송되었습니다. 이메일을 확인해주세요!');
+        e.target.reset();
+        e.target.querySelector('button[type="submit"]').disabled = true;
       } else if (res.status === 409) {
         showToast('이미 존재하는 아이디입니다.', 'red');
       } else {
-        const data = await res.json();
         showToast(data.message || '회원가입 실패', 'red');
       }
     });

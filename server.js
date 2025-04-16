@@ -20,8 +20,8 @@ const userRouter = require('./User/user'); // 회원가입/로그인 기능을 �
 app.use('/user', userRouter); // 유저라우터가 담당하는 모든 라우트 경로 앞에 /user를
 //붙이겠다. POST/user/register 또는 GET / user /list 같은 API경로
 
-const path = require('path'); // 📦 경로 처리용 모듈 추가
-app.use(express.static(path.join(__dirname, 'public'))); // 📁 public 폴더 내 정적 파일 제공
+const path = require('path'); //  경로 처리용 모듈 추가
+app.use(express.static(path.join(__dirname, 'public'))); //  public 폴더 내 정적 파일 제공
 
 if (require.main === module) {
   app.listen(port, () => {
