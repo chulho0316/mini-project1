@@ -16,10 +16,13 @@ db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE,
+      email TEXT,
       password TEXT,
+      is_verified INTEGER DEFAULT 0,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-      `); // 유저 테이블 생성하는거
+    )
+  `);
+  ; // 유저 테이블 생성하는거
       // INTEGER(id) : 자동 증가되는 번호(PK)
       // TEXT(username) : 사용자이름, 중복안됨(UNIQUE)
       // TEXT(password) : 암호화된 비밀번호 저장 예정

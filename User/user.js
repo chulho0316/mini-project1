@@ -83,8 +83,7 @@ router.post('/login', async (req, res) => {
 
       return res.status(403).json({ message: '이메일 인증이 완료되지 않았습니다.' });
     }  // 이메일 인증 안 된 사용자 차단
-    const match = await bcrypt.compare(password, user.password); // 비밀번호 비교
-    if (!match) {
+    if (password !== user.password) {
       return res.status(401).json({ message: '비밀번호가 일치하지 않습니다.' });
     }
 
@@ -221,11 +220,12 @@ router.post('/forgot-password', async (req, res) => {
 // 회원가입 (이메일 인증 방식)
 router.post('/register', async (req, res) => {
   const { username, email, password } = req.body;
-  console.log("\n\n username, email, password : ", username, email, password)
+  console.log("\n\n username, email, password : ", username, email, password);
+
   const schema = Joi.object({
     username: Joi.string().min(3).required(),
     email: Joi.string().email().required(),
-    password: Joi.string().min(4).required()
+    password: Joi.string().min(64).required()  // SHA-512 해시는 길이가 128 (hex), 최소 64 이상 체크
   });
 
   const { error } = schema.validate({ username, email, password });
@@ -236,15 +236,13 @@ router.post('/register', async (req, res) => {
   UserModel.findUserByUsername(username, async (err, user) => {
     if (user) return res.status(409).json({ message: '이미 존재하는 아이디입니다.' });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = password;  // 이제 이건 이미 해싱된 상태임
 
-    // DB 저장
     UserModel.createUser(username, email, hashedPassword, function (err) {
       if (err) return res.status(500).json({ message: 'DB 저장 실패', error: err.message });
 
       const userId = this.lastID;
 
-      // 이메일 인증 토큰 생성
       const token = jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '10m' });
       const verifyUrl = `http://localhost:3000/user/verify-email?token=${token}`;
 

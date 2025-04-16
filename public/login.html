@@ -69,35 +69,42 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <script>
-    const showToast = (message, color = 'green') => {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.style.backgroundColor = color === 'red' ? '#f87171' : '#4ade80';
-      toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 3000);
-    };
+<!-- SHA-512 해시 라이브러리 추가 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
+<script>
+  const showToast = (message, color = 'green') => {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.style.backgroundColor = color === 'red' ? '#f87171' : '#4ade80';
+    toast.classList.remove('hidden');
+    setTimeout(() => toast.classList.add('hidden'), 3000);
+  };
 
-      const res = await fetch('/user/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const rawPassword = document.getElementById('password').value;
 
-      if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem('token', data.token);
-        showToast('로그인 성공!');
-        setTimeout(() => location.href = '/dashboard.html', 1500);
-      } else {
-        showToast('아이디 또는 비밀번호가 올바르지 않습니다.', 'red');
-      }
+    //  SHA-512로 비밀번호 해싱
+    const hashedPassword = CryptoJS.SHA512(password).toString();
+
+    const res = await fetch('/user/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password: hashedPassword })  //  해시된 비번 전송
     });
-  </script>
+
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem('token', data.token);
+      showToast('로그인 성공!');
+      setTimeout(() => location.href = '/dashboard.html', 1500);
+    } else {
+      showToast('아이디 또는 비밀번호가 올바르지 않습니다.', 'red');
+    }
+  });
+</script>
+
 </body>
 </html>
