@@ -60,51 +60,50 @@
       </button>
     </form>
     <p class="text-center text-sm text-gray-500 mt-4">
-        계정이 없으신가요? <a href="/register.html" class="text-blue-500 hover:underline">회원가입</a><br>
-        <span class="text-gray-400 text-xs">또는</span><br>
-        <a href="/find-id.html" class="text-blue-500 hover:underline">아이디 찾기</a> /
-        <a href="/find-password.html" class="text-blue-500 hover:underline">비밀번호 찾기</a>
-      </p>      
+      계정이 없으신가요? <a href="/register.html" class="text-blue-500 hover:underline">회원가입</a><br>
+      <span class="text-gray-400 text-xs">또는</span><br>
+      <a href="/find-id.html" class="text-blue-500 hover:underline">아이디 찾기</a> /
+      <a href="/find-password.html" class="text-blue-500 hover:underline">비밀번호 찾기</a>
+    </p>
   </div>
 
   <div id="toast" class="toast hidden"></div>
 
-<!-- SHA-512 해시 라이브러리 추가 -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+  <!-- SHA-512 해시 라이브러리 추가 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
-<script>
-  const showToast = (message, color = 'green') => {
-    const toast = document.getElementById('toast');
-    toast.textContent = message;
-    toast.style.backgroundColor = color === 'red' ? '#f87171' : '#4ade80';
-    toast.classList.remove('hidden');
-    setTimeout(() => toast.classList.add('hidden'), 3000);
-  };
+  <script>
+    const showToast = (message, color = 'green') => {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.style.backgroundColor = color === 'red' ? '#f87171' : '#4ade80';
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    };
 
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = document.getElementById('username').value;
-    const rawPassword = document.getElementById('password').value;
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const rawPassword = document.getElementById('password').value;
 
-    //  SHA-512로 비밀번호 해싱
-    const hashedPassword = CryptoJS.SHA512(password).toString();
+      // SHA-512 해싱
+      const hashedPassword = CryptoJS.SHA512(rawPassword).toString();
 
-    const res = await fetch('/user/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password: hashedPassword })  //  해시된 비번 전송
+      const res = await fetch('/user/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password: hashedPassword })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        localStorage.setItem('token', data.token);
+        showToast('로그인 성공!');
+        setTimeout(() => location.href = '/my-info.html', 1500);
+      } else {
+        showToast('아이디 또는 비밀번호가 올바르지 않습니다.', 'red');
+      }
     });
-
-    if (res.ok) {
-      const data = await res.json();
-      localStorage.setItem('token', data.token);
-      showToast('로그인 성공!');
-      setTimeout(() => location.href = '/dashboard.html', 1500);
-    } else {
-      showToast('아이디 또는 비밀번호가 올바르지 않습니다.', 'red');
-    }
-  });
-</script>
-
+  </script>
 </body>
 </html>

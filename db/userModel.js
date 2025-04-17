@@ -35,6 +35,12 @@ function findUserByUsernameAndEmail(username, email, callback) {
   db.get(query, [username, email], callback);
 }
 
+// 사용자 조회 (email 기준 - 아이디 찾기용)
+function findUserByEmail(email, callback) {
+  const query = 'SELECT username FROM users WHERE email = ?';
+  db.get(query, [email], callback);
+}
+
 // 이메일 인증 처리 (is_verified = 1로 변경)
 function verifyEmail(userId, callback) {
   const query = 'UPDATE users SET is_verified = 1 WHERE id = ?';
@@ -60,7 +66,8 @@ module.exports = {
   findUserByUsername,
   findUserById,
   findUserByUsernameAndEmail,
-  verifyEmail, // ✅ 이메일 인증 처리용 함수 추가
+  findUserByEmail, // 사용자 이메일 찾기
+  verifyEmail, // 이메일 인증 처리용 함수 추가
   updatePassword,
   deleteUser
 };

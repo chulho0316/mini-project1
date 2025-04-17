@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -13,7 +12,6 @@
     body {
       font-family: 'Inter', sans-serif;
     }
-
     .toast {
       position: fixed;
       bottom: 20px;
@@ -25,29 +23,13 @@
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       animation: fadein 0.5s ease, fadeout 0.5s ease 2.5s;
     }
-
     @keyframes fadein {
-      from {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
-
     @keyframes fadeout {
-      from {
-        opacity: 1;
-        transform: translateY(0);
-      }
-
-      to {
-        opacity: 0;
-        transform: translateY(10px);
-      }
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(10px); }
     }
   </style>
 </head>
@@ -84,6 +66,7 @@
 
   <div id="toast" class="toast hidden"></div>
 
+  <!-- SHA-512 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script>
     const showToast = (message, color = 'green') => {
@@ -98,6 +81,9 @@
       e.preventDefault();
       const username = document.getElementById('username').value;
       const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const confirmPassword = document.getElementById('confirmPassword').value;
+
       const hashedPassword = CryptoJS.SHA512(password).toString();
       const hashedConfirm = CryptoJS.SHA512(confirmPassword).toString();
 
@@ -109,13 +95,18 @@
       const res = await fetch('/user/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password: hashedPassword })
+        body: JSON.stringify({
+          username,
+          email,
+          password: hashedPassword,
+          confirmPassword: hashedConfirm
+        })
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        showToast(' 인증 메일이 전송되었습니다. 이메일을 확인해주세요!');
+        showToast('인증 메일이 전송되었습니다. 이메일을 확인해주세요!');
         e.target.reset();
         e.target.querySelector('button[type="submit"]').disabled = true;
       } else if (res.status === 409) {
@@ -126,5 +117,4 @@
     });
   </script>
 </body>
-
 </html>
