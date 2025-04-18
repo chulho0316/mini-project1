@@ -4,7 +4,6 @@ const express = require('express');
 const router = express.Router();
 const Joi = require('joi');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
 const nodemailer = require('nodemailer');
 const UserModel = require('../db/userModel');
 const authenticateToken = require('../middlewares/auth');
@@ -54,15 +53,29 @@ router.patch('/:id', authenticateToken, async (req, res) => {
   const userId = parseInt(req.params.id);
   if (req.user.id !== userId) return res.status(403).json({ message: '본인의 정보만 수정할 수 있습니다.' });
 
-  const schema = Joi.object({ password: Joi.string().min(4).required() });
-  const { error } = schema.validate({ password: req.body.password });
+  const schema = Joi.object({
+    currentPassword: Joi.string().required(),
+    newPassword: Joi.string().min(64).required()
+  });
+  const { error } = schema.validate(req.body);
   if (error) return res.status(400).json({ message: error.details[0].message });
 
-  const hashedPassword = await bcrypt.hash(req.body.password, 10);
-  UserModel.updatePassword(userId, hashedPassword, (err) => {
-    if (err) return res.status(500).json({ message: 'DB 업데이트 실패', error: err.message });
-    res.json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
-  });
+  const { currentPassword, newPassword } = req.body;
+
+  UserModel.findUserById(userId, (err, user) => {
+    if (err) return res.status(500).json({ message: 'DB 조회 실패', error: err.message });
+    if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+  
+    const dbPassword = user.password.toString(); // 💥 핵심!
+    if (dbPassword !== currentPassword) {
+      return res.status(401).json({ message: '기존 비밀번호가 일치하지 않습니다.' });
+    }
+  
+    UserModel.updatePassword(userId, newPassword, (err) => {
+      if (err) return res.status(500).json({ message: '비밀번호 변경 실패', error: err.message });
+      res.json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
+    });
+  });  
 });
 
 // 회원 탈퇴
@@ -90,7 +103,7 @@ router.post('/find-id', async (req, res) => {
   });
 });
 
-// 비밀번호 찾기
+// 비밀번호 찾기 → 이메일로 링크 전송
 router.post('/forgot-password', async (req, res) => {
   const { username, email } = req.body;
   const schema = Joi.object({ username: Joi.string().required(), email: Joi.string().email().required() });
@@ -101,32 +114,70 @@ router.post('/forgot-password', async (req, res) => {
     if (err) return res.status(500).json({ message: 'DB 조회 실패', error: err.message });
     if (!user) return res.status(404).json({ message: '일치하는 사용자가 없습니다.' });
 
-    const tempPassword = Math.random().toString(36).slice(2, 10);
-    const hashedTemp = await bcrypt.hash(tempPassword, 10);
+    const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '15m' });
+    const resetUrl = `http://localhost:3000/reset-password.html?token=${token}`;
 
-    UserModel.updatePassword(user.id, hashedTemp, async (err) => {
-      if (err) return res.status(500).json({ message: '비밀번호 업데이트 실패', error: err.message });
-
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
-      });
-
-      const mailOptions = {
-        from: process.env.EMAIL_USER,
-        to: email,
-        subject: '[Mini Project] 임시 비밀번호 안내',
-        text: `안녕하세요, ${username}님!\n\n임시 비밀번호: ${tempPassword}\n\n로그인 후 반드시 비밀번호를 변경해주세요.`
-      };
-
-      try {
-        await transporter.sendMail(mailOptions);
-        res.json({ message: '임시 비밀번호가 이메일로 전송되었습니다.' });
-      } catch (mailErr) {
-        res.status(500).json({ message: '이메일 전송 실패', error: mailErr.message });
-      }
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
     });
+
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: '[Mini Project] 비밀번호 재설정 안내',
+      html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+          <p style="font-size: 16px;">안녕하세요, <strong>${username}</strong>님 </p>
+          <p style="font-size: 15px;">비밀번호 재설정을 원하신다면 아래 버튼을 눌러주세요.</p>
+          <div style="margin: 24px 0;">
+            <a href="${resetUrl}" style="padding:12px 24px; background:#3b82f6; color:#fff; border-radius:8px; text-decoration:none; font-weight:bold;">비밀번호 재설정</a>
+          </div>
+          <p style="font-size: 14px; color: #666;">이 링크는 <strong>15분 동안만</strong> 유효합니다. 이후에는 다시 요청해 주세요.</p>
+        </div>
+      `
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+      res.json({ message: '비밀번호 재설정 링크가 이메일로 전송되었습니다.' });
+    } catch (mailErr) {
+      res.status(500).json({ message: '이메일 전송 실패', error: mailErr.message });
+    }
   });
+});
+
+// 비밀번호 재설정 (reset-password.html 연동)
+router.post('/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+    if (!token || !newPassword) {
+      return res.status(400).json({ message: '토큰 또는 비밀번호가 누락되었습니다.' });
+    }
+
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(400).json({ message: '유효하지 않거나 만료된 토큰입니다.' });
+    }
+
+    const username = decoded.username;
+    if (!username) return res.status(400).json({ message: '토큰에 유효한 사용자 정보가 없습니다.' });
+
+    UserModel.findUserByUsername(username, async (err, user) => {
+      if (err) return res.status(500).json({ message: 'DB 조회 실패', error: err.message });
+      if (!user) return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+
+      await UserModel.updatePassword(user.id, newPassword, (err) => {
+        if (err) return res.status(500).json({ message: '비밀번호 변경 실패', error: err.message });
+        return res.status(200).json({ message: '비밀번호가 성공적으로 변경되었습니다.' });
+      });
+    });
+  } catch (error) {
+    console.error('비밀번호 재설정 오류:', error);
+    return res.status(500).json({ message: '서버 오류로 인해 비밀번호를 변경할 수 없습니다.' });
+  }
 });
 
 // 회원가입 (이메일 인증)

@@ -63,7 +63,7 @@
       계정이 없으신가요? <a href="/register.html" class="text-blue-500 hover:underline">회원가입</a><br>
       <span class="text-gray-400 text-xs">또는</span><br>
       <a href="/find-id.html" class="text-blue-500 hover:underline">아이디 찾기</a> /
-      <a href="/find-password.html" class="text-blue-500 hover:underline">비밀번호 찾기</a>
+      <a href="/forgot-password.html" class="text-blue-500 hover:underline">비밀번호 찾기</a>
     </p>
   </div>
 
@@ -98,6 +98,7 @@
       if (res.ok) {
         const data = await res.json();
         localStorage.setItem('token', data.token);
+        localStorage.setItem('userId', data.userId);
         showToast('로그인 성공!');
         setTimeout(() => location.href = '/my-info.html', 1500);
       } else {
