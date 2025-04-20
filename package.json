@@ -8,6 +8,7 @@
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.10.1",
+    "pg": "^8.14.1",
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {

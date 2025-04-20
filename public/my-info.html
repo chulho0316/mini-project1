@@ -33,10 +33,13 @@
 
     <div class="space-y-3">
       <button onclick="location.href='/change-password.html'"
-        class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded transition">비밀번호 변경</button>
-
+        class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded transition">
+        비밀번호 변경
+      </button>
       <button onclick="confirmDelete()"
-        class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded transition">회원 탈퇴</button>
+        class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded transition">
+        회원 탈퇴
+      </button>
     </div>
   </div>
 
@@ -49,42 +52,39 @@
 
     async function fetchUserInfo() {
       const res = await fetch('/user/me', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
 
       if (res.ok) {
-        const data = await res.json();
-        document.getElementById('username').textContent = data.user.username;
-        document.getElementById('email').textContent = data.user.email;
+        const { user } = await res.json();
+        document.getElementById('username').textContent = user.username;
+        document.getElementById('email').textContent    = user.email;
       } else {
-        alert('사용자 정보를 불러오지 못했습니다.');
+        const err = await res.json();
+        alert(err.message || '사용자 정보를 불러오는 데 실패했습니다.');
         location.href = '/login.html';
       }
     }
 
     function logout() {
       localStorage.removeItem('token');
+      localStorage.removeItem('userId');
       location.href = '/login.html';
     }
 
-    function confirmDelete() {
-      if (confirm('정말로 회원 탈퇴하시겠습니까?')) {
-        const userId = JSON.parse(atob(token.split('.')[1])).id;
-
-        fetch(`/user/${userId}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` }
-        }).then(res => {
-          if (res.ok) {
-            alert('회원 탈퇴가 완료되었습니다.');
-            logout();
-          } else {
-            alert('회원 탈퇴에 실패했습니다.');
-          }
-        });
-      }
+    async function confirmDelete() {
+      if (!confirm('정말로 회원 탈퇴하시겠습니까?')) return;
+      const userId = localStorage.getItem('userId');
+      const res    = await fetch(`/user/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data   = await res.json();
+      alert(data.message);
+      if (res.ok) logout();
     }
 
+    // 페이지 로드 시 사용자 정보 가져오기
     fetchUserInfo();
   </script>
 </body>

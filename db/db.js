@@ -1,36 +1,59 @@
-const sqlite3 = require('sqlite3').verbose(); //sqlite3 모듈을 불러옴 .verbose()는 오류나 로그를 자세히 보여주는 모드임.
-const path = require('path'); //path는 파일경로 다룰때 유용한 node.js기본 모듈임.(윈도우/리눅스 상관없이 경로를 알아서 맞춰줌.)
+// 기존 SQLite 연결 코드 (주석 처리)
+// const sqlite3 = require('sqlite3').verbose();
+// const path    = require('path');
+// const dbPath  = path.join(__dirname, 'users.db');
+// const db      = new sqlite3.Database(dbPath, (err) => {
+//   if (err) console.error('DB 연결 실패:', err.message);
+//   else console.log('SQLite DB 연결 성공');
+//});
+//
+// db.run(`
+//   CREATE TABLE IF NOT EXISTS users (
+//     id INTEGER PRIMARY KEY AUTOINCREMENT,
+//     username TEXT UNIQUE,
+//     email TEXT,
+//     password TEXT,
+//     is_verified INTEGER DEFAULT 0,
+//     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+//   )
+//`);
+// module.exports = db;
 
-const dbPath = path.join(__dirname, 'users.db'); //__dirname은 지금 이 파일(db.js)이 있는 폴더 경로
-// 거기에 users.db 파일 이름 붙여서 전체 경로 생성. db파일경로 설정하는거임(없으면 자동 생성됨)
+// PostgreSQL Pool 연결 모듈
+const { Pool } = require('pg');
+require('dotenv').config();
 
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-        console.error('DB 연결 실패:', err.message);
-    } else {
-        console.log('SQLite DB 연결 성공');
-    }
-}); //dbpath에 있는 파일을 연결. 파일이 없으면 자동으로 생성하고, 테이블 생성. sql이라는 언어 사용 테이블 생성 지시
+// .env에 정의된 변수 로드
+const pool = new Pool({
+  host:     process.env.PGHOST,
+  port:     process.env.PGPORT,
+  database: process.env.PGDATABASE,
+  user:     process.env.PGUSER,
+  password: process.env.PGPASSWORD,
+});
 
-db.run(`
+pool.on('connect', () => {
+  console.log('PostgreSQL connected');
+});
+
+// 앱 시작 시 users 테이블이 없으면 생성
+(async () => {
+  const createTableSQL = `
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE,
-      email TEXT,
-      password TEXT,
-      is_verified INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-  ; // 유저 테이블 생성하는거
-      // INTEGER(id) : 자동 증가되는 번호(PK)
-      // TEXT(username) : 사용자이름, 중복안됨(UNIQUE)
-      // TEXT(password) : 암호화된 비밀번호 저장 예정
-      // DATETIME(created_at) : 가입 시각, 자동으로 현재시간 저장됨
-      // IF NOT EXISTS : 이미 있으면 만들기ㄴㄴ(중복 생성 방지)
+      id SERIAL PRIMARY KEY,
+      username TEXT UNIQUE NOT NULL,
+      email TEXT NOT NULL,
+      password TEXT NOT NULL,
+      is_verified BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+    );
+  `;
+  try {
+    await pool.query(createTableSQL);
+    console.log('users table is ready');
+  } catch (err) {
+    console.error('Failed to ensure users table:', err);
+  }
+})();
 
-module.exports = db;
-//이 db 연결을 다른파일에서도 쓸수 있게 내보냄
-//요약하자면 SQLite는 파일 기반 데이터 베이스고
-//테이블은 그냥 엑셀처럼 생긴 데이터 저장 구조
-//모듈 exports는 다른 js파일에 공유하기 위한 코드임
+module.exports = pool;

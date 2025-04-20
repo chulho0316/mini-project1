@@ -1,66 +1,43 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>로그인</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet" />
   <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
+    body { font-family: 'Inter', sans-serif; }
     .toast {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background-color: #4ade80;
-      color: white;
-      padding: 10px 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      bottom: 20px; right: 20px;
+      background-color: #4ade80; color: white;
+      padding: 10px 20px; border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       animation: fadein 0.5s ease, fadeout 0.5s ease 2.5s;
     }
-    @keyframes fadein {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes fadeout {
-      from { opacity: 1; transform: translateY(0); }
-      to { opacity: 0; transform: translateY(10px); }
-    }
+    @keyframes fadein { from { opacity: 0; transform: translateY(10px) } to { opacity:1; transform:translateY(0) } }
+    @keyframes fadeout{ from { opacity: 1; } to { opacity:0; } }
   </style>
 </head>
-
 <body class="bg-gray-100 min-h-screen flex items-center justify-center">
   <div class="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
     <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">🔐 로그인</h1>
     <form id="loginForm" class="space-y-4">
-      <input
-        type="text"
-        id="username"
-        placeholder="아이디"
-        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-        required
-      />
-      <input
-        type="password"
-        id="password"
-        placeholder="비밀번호"
-        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-        required
-      />
-      <button
-        type="submit"
-        class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
-      >
+      <input type="text"    id="username" placeholder="아이디" required
+             class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400"/>
+      <input type="password" id="password" placeholder="비밀번호" required
+             class="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400"/>
+      <button type="submit"
+              class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600">
         로그인
       </button>
     </form>
     <p class="text-center text-sm text-gray-500 mt-4">
-      계정이 없으신가요? <a href="/register.html" class="text-blue-500 hover:underline">회원가입</a><br>
+      계정이 없으신가요?
+      <a href="/register.html" class="text-blue-500 hover:underline">회원가입</a><br>
       <span class="text-gray-400 text-xs">또는</span><br>
       <a href="/find-id.html" class="text-blue-500 hover:underline">아이디 찾기</a> /
       <a href="/forgot-password.html" class="text-blue-500 hover:underline">비밀번호 찾기</a>
@@ -69,40 +46,49 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <!-- SHA-512 해시 라이브러리 추가 -->
+  <!-- SHA-512 해시 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
   <script>
-    const showToast = (message, color = 'green') => {
-      const toast = document.getElementById('toast');
-      toast.textContent = message;
-      toast.style.backgroundColor = color === 'red' ? '#f87171' : '#4ade80';
-      toast.classList.remove('hidden');
-      setTimeout(() => toast.classList.add('hidden'), 3000);
-    };
+    // toast 표시 함수
+    function showToast(msg, color='green') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.style.backgroundColor = (color==='red' ? '#f87171' : '#4ade80');
+      t.classList.remove('hidden');
+      setTimeout(()=> t.classList.add('hidden'), 3000);
+    }
 
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    // URL status 파라미터에 따른 메시지
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    if (status === 'verified') {
+      showToast('이메일 인증 완료! 로그인 해주세요.', 'green');
+    } else if (status === 'invalid') {
+      showToast('잘못된 인증 링크이거나 만료되었습니다.', 'red');
+    }
+
+    // 로그인 처리
+    document.getElementById('loginForm').addEventListener('submit', async e => {
       e.preventDefault();
-      const username = document.getElementById('username').value;
-      const rawPassword = document.getElementById('password').value;
-
-      // SHA-512 해싱
-      const hashedPassword = CryptoJS.SHA512(rawPassword).toString();
+      const user = document.getElementById('username').value.trim();
+      const raw  = document.getElementById('password').value;
+      const pw   = CryptoJS.SHA512(raw).toString();
 
       const res = await fetch('/user/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password: hashedPassword })
+        headers:{ 'Content-Type':'application/json' },
+        body: JSON.stringify({ username: user, password: pw })
       });
+      const data = await res.json();
 
       if (res.ok) {
-        const data = await res.json();
-        localStorage.setItem('token', data.token);
+        localStorage.setItem('token',  data.token);
         localStorage.setItem('userId', data.userId);
-        showToast('로그인 성공!');
-        setTimeout(() => location.href = '/my-info.html', 1500);
+        showToast('로그인 성공!', 'green');
+        setTimeout(()=> location.href='/my-info.html', 1000);
       } else {
-        showToast('아이디 또는 비밀번호가 올바르지 않습니다.', 'red');
+        showToast(data.message||'로그인 실패', 'red');
       }
     });
   </script>

@@ -3,74 +3,147 @@
 <head>
   <meta charset="UTF-8">
   <title>회원 기능 실습</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsSHA/2.4.2/sha.js"></script>
 </head>
-<body>
-  <h1>회원 기능 실습</h1> 
+<body class="p-8 font-sans">
 
-  <h2>회원가입</h2> 
-  <form id="registerForm">
-    <input type="text" id="regUsername" placeholder="아이디" required /> 
-    <input type="password" id="regPassword" placeholder="비밀번호" required /> 
-    <button type="submit">회원가입</button> 
-  </form>
+  <h1 class="text-3xl mb-6">회원 기능 실습</h1> 
 
-  <h2>로그인</h2> 
-  <form id="loginForm">
-    <input type="text" id="loginUsername" placeholder="아이디" required /> 
-    <input type="password" id="loginPassword" placeholder="비밀번호" required /> 
-    <button type="submit">로그인</button> 
-  </form>
+  <!-- 회원가입 -->
+  <section class="mb-8">
+    <h2 class="text-2xl font-bold mb-2">회원가입</h2> 
+    <form id="registerForm" class="space-y-2">
+      <input type="text"    id="regUsername" placeholder="아이디"           required
+             class="w-full p-2 border rounded" />
+      <input type="email"   id="regEmail"    placeholder="이메일"           required
+             class="w-full p-2 border rounded" />
+      <input type="password" id="regPassword" placeholder="비밀번호"        required
+             class="w-full p-2 border rounded" />
+      <input type="password" id="regConfirm"  placeholder="비밀번호 확인"   required
+             class="w-full p-2 border rounded" />
+      <button type="submit"
+              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        회원가입
+      </button> 
+    </form>
+  </section>
 
-  <h2>내 정보 보기</h2> 
-  <button onclick="loadUserInfo()">내 정보</button> 
-  <div id="userInfo"></div> 
+  <!-- 로그인 -->
+  <section class="mb-8">
+    <h2 class="text-2xl font-bold mb-2">로그인</h2> 
+    <form id="loginForm" class="space-y-2">
+      <input type="text"    id="loginUsername" placeholder="아이디" required
+             class="w-full p-2 border rounded" />
+      <input type="password" id="loginPassword" placeholder="비밀번호" required
+             class="w-full p-2 border rounded" />
+      <button type="submit"
+              class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+        로그인
+      </button> 
+    </form>
+  </section>
 
-  <h2>비밀번호 변경</h2> 
-  <form id="passwordForm">
-    <input type="password" id="newPassword" placeholder="새 비밀번호" required />
-    <button type="submit">비밀번호 수정</button>
-  </form>
+  <!-- 내 정보 보기 -->
+  <section class="mb-8">
+    <h2 class="text-2xl font-bold mb-2">내 정보 보기</h2> 
+    <button onclick="loadUserInfo()" 
+            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+      내 정보
+    </button> 
+    <div id="userInfo" class="mt-4"></div> 
+  </section>
 
-  <h2>회원 탈퇴</h2> 
-  <button id="deleteBtn">회원 탈퇴</button> 
+  <!-- 비밀번호 변경 -->
+  <section class="mb-8">
+    <h2 class="text-2xl font-bold mb-2">비밀번호 변경</h2> 
+    <form id="passwordForm" class="space-y-2">
+      <input type="password" id="currentPassword" placeholder="현재 비밀번호" required
+             class="w-full p-2 border rounded" />
+      <input type="password" id="newPassword"     placeholder="새 비밀번호"   required
+             class="w-full p-2 border rounded" />
+      <button type="submit"
+              class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
+        비밀번호 수정
+      </button>
+    </form>
+  </section>
 
-  <h2>전체 회원 목록</h2>
-  <button onclick="loadUserList()">전체 회원 조회</button>
-  <ul id="userList"></ul> 
+  <!-- 회원 탈퇴 -->
+  <section class="mb-8">
+    <h2 class="text-2xl font-bold mb-2">회원 탈퇴</h2> 
+    <button id="deleteBtn"
+            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+      회원 탈퇴
+    </button> 
+  </section>
+
+  <!-- 전체 회원 목록 -->
+  <section>
+    <h2 class="text-2xl font-bold mb-2">전체 회원 목록</h2>
+    <button onclick="loadUserList()"
+            class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">
+      전체 회원 조회
+    </button>
+    <ul id="userList" class="mt-4 list-disc pl-5"></ul> 
+  </section>
 
   <script>
-    // 회원가입 요청
+    // 회원가입
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('regUsername').value;
-      const password = document.getElementById('regPassword').value;
+      const email    = document.getElementById('regEmail').value;
+      const pwd      = document.getElementById('regPassword').value;
+      const confirm  = document.getElementById('regConfirm').value;
 
-      const res = await fetch('/user', {
+      if (pwd !== confirm) {
+        return alert('비밀번호와 확인이 일치하지 않습니다.');
+      }
+
+      // SHA-512 해싱
+      const sha1 = new jsSHA("SHA-512", "TEXT");
+      sha1.update(pwd);
+      const hashedPwd = sha1.getHash("HEX");
+      const sha2 = new jsSHA("SHA-512", "TEXT");
+      sha2.update(confirm);
+      const hashedConfirm = sha2.getHash("HEX");
+
+      const res = await fetch('/user/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({
+          username,
+          email,
+          password: hashedPwd,
+          confirmPassword: hashedConfirm
+        })
       });
-
       const data = await res.json();
       alert(data.message);
     });
 
-    // 로그인 요청
+    // 로그인
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const username = document.getElementById('loginUsername').value;
-      const password = document.getElementById('loginPassword').value;
+      const pwd      = document.getElementById('loginPassword').value;
+
+      // SHA-512 해싱
+      const sha = new jsSHA("SHA-512", "TEXT");
+      sha.update(pwd);
+      const hashed = sha.getHash("HEX");
 
       const res = await fetch('/user/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password: hashed })
       });
-
       const data = await res.json();
 
       if (res.ok) {
         localStorage.setItem('token', data.token);
+        localStorage.setItem('userId', data.userId);
         alert('로그인 성공!');
         loadUserInfo();
       } else {
@@ -78,95 +151,87 @@
       }
     });
 
-    // 내 정보 불러오기
+    // 내 정보 조회
     async function loadUserInfo() {
       const token = localStorage.getItem('token');
       const res = await fetch('/user/me', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
       const data = await res.json();
-      const div = document.getElementById('userInfo');
-
+      const div  = document.getElementById('userInfo');
       if (res.ok) {
         div.innerHTML = `<p>안녕하세요, ${data.user.username}님 (ID: ${data.user.id})</p>`;
       } else {
-        div.innerHTML = `<p>${data.message}</p>`;
+        div.textContent = data.message;
       }
     }
 
-    // 비밀번호 수정
+    // 비밀번호 변경
     document.getElementById('passwordForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const token = localStorage.getItem('token');
+      const current = document.getElementById('currentPassword').value;
+      const neo     = document.getElementById('newPassword').value;
 
-      const meRes = await fetch('/user/me', {
-        headers: { Authorization: `Bearer ${token}` }
+      // SHA-512 해싱
+      const shaOld = new jsSHA("SHA-512", "TEXT");
+      shaOld.update(current);
+      const hashedOld = shaOld.getHash("HEX");
+      const shaNew = new jsSHA("SHA-512", "TEXT");
+      shaNew.update(neo);
+      const hashedNew = shaNew.getHash("HEX");
+
+      const userId = localStorage.getItem('userId');
+      const res = await fetch(`/user/${userId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          currentPassword: hashedOld,
+          newPassword: hashedNew
+        })
       });
-
-      const meData = await meRes.json();
-      const userId = meData.user?.id;
-      const newPassword = document.getElementById('newPassword').value;
-
-      if (userId && token) {
-        const res = await fetch(`/user/${userId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({ password: newPassword })
-        });
-
-        const data = await res.json();
-        alert(data.message);
-      } else {
-        alert('로그인이 필요합니다.');
-      }
+      const data = await res.json();
+      alert(data.message);
     });
 
     // 회원 탈퇴
     document.getElementById('deleteBtn').addEventListener('click', async () => {
       const token = localStorage.getItem('token');
+      const userId = localStorage.getItem('userId');
+      if (!token || !userId) {
+        return alert('로그인이 필요합니다.');
+      }
+      if (!confirm('정말 탈퇴하시겠습니까?')) return;
 
-      const meRes = await fetch('/user/me', {
-        headers: { Authorization: `Bearer ${token}` }
+      const res = await fetch(`/user/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
       });
-
-      const meData = await meRes.json();
-      const userId = meData.user?.id;
-
-      if (userId && token) {
-        const confirmDelete = confirm('정말 탈퇴하시겠습니까?');
-        if (!confirmDelete) return;
-
-        const res = await fetch(`/user/${userId}`, {
-          method: 'DELETE',
-          headers: { Authorization: `Bearer ${token}` }
-        });
-
-        const data = await res.json();
-        alert(data.message);
+      const data = await res.json();
+      alert(data.message);
+      if (res.ok) {
         localStorage.removeItem('token');
-        location.reload();
-      } else {
-        alert('로그인이 필요합니다.');
+        localStorage.removeItem('userId');
+        window.location.reload();
       }
     });
 
-    // 전체 회원 목록 불러오기
+    // 전체 회원 목록
     async function loadUserList() {
-      const res = await fetch('/user/list'); // 리스트 요청
-      const data = await res.json(); // JSON 파싱
-      const list = document.getElementById('userList'); // 출력 영역
-
-      list.innerHTML = ''; // 초기화
-      data.users.forEach(user => {
-        const li = document.createElement('li'); // 리스트 아이템 생성
-        li.textContent = `ID: ${user.id}, 아이디: ${user.username}`; // 내용 구성
-        list.appendChild(li); // 목록에 추가
+      const res = await fetch('/user');
+      const data = await res.json();
+      const list = document.getElementById('userList');
+      list.innerHTML = '';
+      data.users.forEach(u => {
+        const li = document.createElement('li');
+        li.textContent = `ID: ${u.id}, 아이디: ${u.username}`;
+        list.append(li);
       });
     }
   </script>
+
 </body>
 </html>

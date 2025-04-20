@@ -25,11 +25,11 @@
     }
     @keyframes fadein {
       from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+      to   { opacity: 1; transform: translateY(0); }
     }
     @keyframes fadeout {
       from { opacity: 1; transform: translateY(0); }
-      to { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 0; transform: translateY(10px); }
     }
   </style>
 </head>
@@ -38,26 +38,41 @@
   <div class="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
     <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">📝 회원가입</h1>
     <form id="registerForm" class="space-y-4">
-      <input type="text" id="username" placeholder="아이디"
-        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-        required />
-
-      <input type="email" id="email" placeholder="이메일"
-        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-        required />
-
-      <input type="password" id="password" placeholder="비밀번호"
-        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-        required />
-
-      <input type="password" id="confirmPassword" placeholder="비밀번호 확인"
-        class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
-        required />
-
-      <button type="submit"
-        class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition">회원가입</button>
+      <input
+        type="text"
+        id="username"
+        placeholder="아이디"
+        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+        required
+      />
+      <input
+        type="email"
+        id="email"
+        placeholder="이메일"
+        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+        required
+      />
+      <input
+        type="password"
+        id="password"
+        placeholder="비밀번호"
+        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+        required
+      />
+      <input
+        type="password"
+        id="confirmPassword"
+        placeholder="비밀번호 확인"
+        class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-400"
+        required
+      />
+      <button
+        type="submit"
+        class="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
+      >
+        회원가입
+      </button>
     </form>
-
     <p class="text-center text-sm text-gray-500 mt-4">
       이미 계정이 있으신가요?
       <a href="/login.html" class="text-blue-500 hover:underline">로그인</a>
@@ -66,28 +81,30 @@
 
   <div id="toast" class="toast hidden"></div>
 
-  <!-- SHA-512 라이브러리 -->
+  <!-- SHA-512 해시 라이브러리 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
   <script>
     const showToast = (message, color = 'green') => {
       const toast = document.getElementById('toast');
       toast.textContent = message;
-      toast.style.backgroundColor = color === 'red' ? '#f87171' : '#4ade80';
+      toast.style.backgroundColor = (color === 'red' ? '#f87171' : '#4ade80');
       toast.classList.remove('hidden');
       setTimeout(() => toast.classList.add('hidden'), 3000);
     };
 
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const username = document.getElementById('username').value;
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      const confirmPassword = document.getElementById('confirmPassword').value;
 
-      const hashedPassword = CryptoJS.SHA512(password).toString();
-      const hashedConfirm = CryptoJS.SHA512(confirmPassword).toString();
+      const username = document.getElementById('username').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const pwd      = document.getElementById('password').value;
+      const confirm  = document.getElementById('confirmPassword').value;
 
-      if (hashedPassword !== hashedConfirm) {
+      // SHA-512 해싱
+      const hashedPwd     = CryptoJS.SHA512(pwd).toString();
+      const hashedConfirm = CryptoJS.SHA512(confirm).toString();
+
+      if (hashedPwd !== hashedConfirm) {
         showToast('비밀번호가 일치하지 않습니다.', 'red');
         return;
       }
@@ -98,7 +115,7 @@
         body: JSON.stringify({
           username,
           email,
-          password: hashedPassword,
+          password: hashedPwd,
           confirmPassword: hashedConfirm
         })
       });
@@ -110,9 +127,9 @@
         e.target.reset();
         e.target.querySelector('button[type="submit"]').disabled = true;
       } else if (res.status === 409) {
-        showToast('이미 존재하는 아이디입니다.', 'red');
+        showToast('이미 사용 중인 아이디 또는 이메일입니다.', 'red');
       } else {
-        showToast(data.message || '회원가입 실패', 'red');
+        showToast(data.message || '회원가입에 실패했습니다.', 'red');
       }
     });
   </script>
