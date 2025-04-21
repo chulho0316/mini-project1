@@ -23,13 +23,16 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
+console.log('🧪 DB_PASSWORD:', process.env.DB_PASSWORD, '타입:', typeof process.env.DB_PASSWORD);
+
 // .env에 정의된 변수 로드
 const pool = new Pool({
-  host:     process.env.PGHOST,
-  port:     process.env.PGPORT,
-  database: process.env.PGDATABASE,
-  user:     process.env.PGUSER,
-  password: process.env.PGPASSWORD,
+  host:     process.env.DB_HOST,
+  port:     parseInt(process.env.DB_PORT, 10),
+  database: process.env.DB_NAME,
+  user:     process.env.DB_USER,
+ //password: process.env.DB_PASSWORD,
+ password:"mypassword"
 });
 
 pool.on('connect', () => {
