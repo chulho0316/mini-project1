@@ -71,6 +71,9 @@
     // 로그인 처리
     document.getElementById('loginForm').addEventListener('submit', async e => {
       e.preventDefault();
+
+      showLoading(); // 로딩 화면 보여주기
+
       const user = document.getElementById('username').value.trim();
       const raw  = document.getElementById('password').value;
       const pw   = CryptoJS.SHA512(raw).toString();
@@ -82,6 +85,8 @@
       });
       const data = await res.json();
 
+      hideLoading(); // 서버 응답 오면 로딩 화면 숨기기
+
       if (res.ok) {
         localStorage.setItem('token',  data.token);
         localStorage.setItem('userId', data.userId);
@@ -92,5 +97,52 @@
       }
     });
   </script>
+  <!-- 로딩 팝업 오버레이 -->
+<div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center hidden z-50">
+  <div class="relative bg-white rounded-lg p-8 flex flex-col items-center overflow-hidden">
+    <!-- 배경 이미지 (머리 없는 위쪽 바탕) -->
+    <div class="absolute inset-0 bg-cover bg-center rounded-lg"
+         style="background-image: url('images/loading_background.png'); opacity: 0.3;"></div>
+    
+    <!-- 캐릭터 애니메이션 -->
+    <div class="flex space-x-4 relative z-10 mb-4">
+      <img src="images/head1.png" alt="캐릭터1" class="w-12 h-12 rounded-full opacity-0 animate-seq2">
+      <img src="images/head2.png" alt="캐릭터2" class="w-12 h-12 rounded-full opacity-0 animate-seq2 delay-1">
+      <img src="images/head3.png" alt="캐릭터3" class="w-12 h-12 rounded-full opacity-0 animate-seq2 delay-2">
+      <img src="images/head4.png" alt="캐릭터4" class="w-12 h-12 rounded-full opacity-0 animate-seq2 delay-3">
+    </div>
+    
+    <!-- 로딩 텍스트 -->
+    <p class="text-lg font-bold text-gray-700 z-10">Loading...</p>
+  </div>
+</div>
+
+<!-- CSS 애니메이션 -->
+<style>
+@keyframes seq2 {
+  0%, 20% { opacity: 0; transform: translateY(0); }
+  30%, 60% { opacity: 1; transform: translateY(-10px); }
+  70%, 100% { opacity: 0; transform: translateY(0); }
+}
+.animate-seq2 {
+  animation: seq2 6s infinite;
+}
+.delay-1 { animation-delay: 0.5s; }
+.delay-2 { animation-delay: 1s; }
+.delay-3 { animation-delay: 1.5s; }
+</style>
+
+<!-- JS 로딩 팝업 컨트롤 -->
+<script>
+// 로딩 팝업 보이기
+function showLoading() {
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+// 로딩 팝업 숨기기
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+</script>
+
 </body>
 </html>

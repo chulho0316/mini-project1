@@ -1,0 +1,4 @@
+[ZoneTransfer]
+ZoneId=3
+ReferrerUrl=https://cloudconvert.com/
+HostUrl=https://eu-central.storage.cloudconvert.com/tasks/578501a4-1664-4b36-82f0-e0e4c91e0cbf/molly_banner_maltese.png.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=cloudconvert-production%2F20250423%2Ffra%2Fs3%2Faws4_request&X-Amz-Date=20250423T072824Z&X-Amz-Expires=86400&X-Amz-Signature=72d98a2faed8b8bf0323a0bd31cc1cd3c48a1e82de7de97b12d865e9502bd072&X-Amz-SignedHeaders=host&response-content-disposition=attachment%3B%20filename%3D%22molly_banner_maltese.png.png%22&response-content-type=image%2Fpng&x-id=GetObject
